@@ -77,8 +77,8 @@ export async function googleLogin(
 
     res.cookie("chat_session", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -154,8 +154,8 @@ export async function getCurrentUser(req: Request, res: Response) {
 export function logout(req: Request, res: Response) {
   res.clearCookie("chat_session", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: true,
+    sameSite: "none",
     path: "/",
   });
 
