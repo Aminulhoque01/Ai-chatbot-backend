@@ -1,60 +1,29 @@
- 
+
 import mongoose from "mongoose";
 
-type MongooseCache = {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
-};
-
-declare global {
-  // eslint-disable-next-line no-var
-  var mongooseCache: MongooseCache | undefined;
-}
-
-const cache: MongooseCache =
-  globalThis.mongooseCache ??
-  (globalThis.mongooseCache = {
-    conn: null,
-    promise: null,
-  });
-
-export async function connectDB(): Promise<typeof mongoose> {
-  if (cache.conn && mongoose.connection.readyState === 1) {
-    return cache.conn;
-  }
-
+export async function connectDB(): Promise<void> {
   const mongoUri = process.env.MONGODB_URI;
 
   if (!mongoUri) {
-    throw new Error("MONGODB_URI is missing from environment variables");
+    throw new Error("MONGODB_URI is missing");
   }
 
-  if (!cache.promise) {
-    cache.promise = mongoose
-      .connect(mongoUri, {
-        serverSelectionTimeoutMS: 10000,
-      })
-      .then((instance) => {
-        console.log(
-          `MongoDB connected: ${mongoose.connection.name}`
-        );
-
-        return instance;
-      })
-      .catch((error: unknown) => {
-        cache.promise = null;
-        cache.conn = null;
-        throw error;
-      });
+  if (mongoose.connection.readyState === 1) {
+    return;
   }
 
   try {
-    cache.conn = await cache.promise;
-    return cache.conn;
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 15000,
+      bufferCommands: false,
+    });
+
+    console.log("MongoDB connected successfully:", {
+      database: mongoose.connection.name,
+      host: mongoose.connection.host,
+    });
   } catch (error) {
-    cache.promise = null;
-    cache.conn = null;
+    console.error("MongoDB connection failed:", error);
     throw error;
   }
 }
- 
