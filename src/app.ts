@@ -9,7 +9,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "https://free-ai-chatbot-eta.vercel.app",
+    origin: process.env.CLIENT_URL || "https://free-ai-chatbot-pi.vercel.app",
     credentials: true,
   })
 );
