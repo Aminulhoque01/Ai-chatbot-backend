@@ -102,3 +102,65 @@ export async function googleLogin(
     });
   }
 }
+
+
+ 
+
+export async function getCurrentUser(req: Request, res: Response) {
+  try {
+    const token = req.cookies?.chat_session;
+    const jwtSecret = process.env.JWT_SECRET;
+
+    if (!token || !jwtSecret) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authenticated",
+      });
+    }
+
+    const decoded = jwt.verify(token, jwtSecret) as {
+      userId: string;
+    };
+
+    const user = await User.findById(decoded.userId).select(
+      "_id name email avatar"
+    );
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar || "",
+      },
+    });
+  } catch {
+    return res.status(401).json({
+      success: false,
+      message: "Session expired or invalid",
+    });
+  }
+}
+
+
+export function logout(req: Request, res: Response) {
+  res.clearCookie("chat_session", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+}
